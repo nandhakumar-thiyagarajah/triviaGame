@@ -13,6 +13,7 @@ const API_ENDPOINT = `https://jservice.io/api/random`;
 
 export default function App() {
     const [isLoading, setIsLoading] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
     const [userInput, setUserInput] = useState("")
     const [data, setData] = useState([]);
     const [error, setError] = useState(null);
@@ -26,9 +27,9 @@ export default function App() {
         fetch(API_ENDPOINT)
             .then(response => response.json())
             .then(results => {
+                setSubmitted(false);
                 setData(results);
                 setUserInput("");
-                // console.warn(JSON.stringify(results))
                 setIsLoading(false);
             })
             .catch(err => {
@@ -38,7 +39,15 @@ export default function App() {
     };
 
     const showAlert = () => {
-        let resultMsg = userInput.toLowerCase() === data[0].answer.replace(/(<([^>]+)>)/ig, '').toLowerCase() ? 'Your Answer is Correct...Move on Next Question' : 'Incorrect Answer..Move on Next Question'
+        setSubmitted(true);
+
+        // To avoid blank space used here trim function
+        let checkInputLength = userInput.trim();
+
+        if (checkInputLength.length === 0) return;
+
+        // few Answer comes with html tag that's why using here html tag pattern to avaoid this
+        let resultMsg = userInput.toLowerCase() === data[0].answer.replace(/(<([^>]+)>)/ig, '').toLowerCase() ? 'Your Answer is Correct...Move on Next Question' : 'Incorrect Answer..Answer is : "' + data[0].answer.replace(/(<([^>]+)>)/ig, '') + '"..Move on Next Question';
         Alert.alert(
             "Result",
             resultMsg,
@@ -69,7 +78,7 @@ export default function App() {
     return (
         <View style={styles.container}>
 
-            <Text style={styles.text}>Answer The question</Text>
+            <Text style={styles.text}>Quiz Test</Text>
             <View style={{ paddingVertical: 30, paddingHorizontal: 20 }}>
                 <FlatList
                     contentContainer={{ flex: 1 }}
@@ -77,11 +86,8 @@ export default function App() {
                     keyExtractor={item => item.first}
                     renderItem={({ item, index }) => (
                         <View style={styles.listItem}>
-                            {/* style={styles.listItem}> */}
                             <View style={styles.metaInfo}>
                                 <Text style={styles.title}>{item.question}</Text>
-                                {/* <Text>{item.answer}</Text>
-                                <Text>{item.answer.replace(/(<([^>]+)>)/ig, '')}</Text> */}
                             </View>
                         </View>
                     )}
@@ -95,21 +101,19 @@ export default function App() {
                     underlineColorAndroid={'black'}
                     value={userInput}
                 />
-                {/* <View> */}
-                {/* <Text>{data[0].question}</Text> */}
 
-                {/* </View> */}
-
+                {
+                    submitted && userInput.length === 0 && <Text style={styles.errorMsg}>Answer is required field</Text>
+                }
 
             </View>
 
-            <TouchableOpacity onPress={() => showAlert()} style={{ alignItems: 'center', backgroundColor: 'blue', width: '80%', alignSelf: 'center', padding: 10, borderRadius: 8 }}>
-                <Text style={{ color: 'white' }}>SUBMIT YOUR ANSWER</Text>
-            </TouchableOpacity>
+            <View style={styles.footerButton}>
+                <TouchableOpacity onPress={() => showAlert()} style={styles.buttonStyles}>
+                    <Text style={{ color: 'white' }}>SUBMIT YOUR ANSWER</Text>
+                </TouchableOpacity>
+            </View>
 
-            {/* <TouchableOpacity onPress={()=>getQuestion()} style={{ alignItems: 'center', backgroundColor: 'violet', width: '80%', alignSelf: 'center', padding: 10, borderRadius: 8,marginTop:15 }}>
-                <Text style={{ color: 'white' }}>NEXT</Text>
-            </TouchableOpacity> */}
         </View>
     );
 }
@@ -143,11 +147,23 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 18,
-        // width: 200,
-        // padding: 20
     },
-    // input: {
-    //     borderColor: 'green',
-    //     borderWidth: 2,
-    // }
+    errorMsg: {
+        color: 'red',
+        textAlign:'left'
+    },
+    buttonStyles: {
+        alignItems: 'center',
+        backgroundColor: 'blue',
+        width: '80%',
+        alignSelf: 'center',
+        padding: 10,
+        borderRadius: 8
+    },
+    footerButton:{
+        left:0,
+        right:0,
+        bottom:50,
+        position:'absolute'
+    }
 });
